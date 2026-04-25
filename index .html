@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <style>
+    :root { 
+      --azul: #0054A6; 
+      --rojo: #D32F2F; 
+      --gris-fondo: #f8f9fa;
+    }
+    
+    html, body { margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, sans-serif; background: var(--gris-fondo); }
+    
+    #captura-area { 
+      width: 100%; 
+      background: white; 
+      padding: 20px; 
+      box-sizing: border-box; 
+      display: flex;
+      flex-direction: column;
+    }
+
+    .top-header { display: flex; justify-content: space-between; align-items: center; padding-bottom: 10px; }
+    .logo-hdr { height: 65px; width: auto; object-fit: contain; }
+    
+    .title-center { text-align: center; flex: 1; }
+    .title-center h1 { color: var(--azul); margin: 0; font-size: 42px; font-weight: 900; text-transform: uppercase; line-height: 1; }
+    .title-center p { margin: 5px 0 0 0; font-size: 14px; color: #555; font-weight: bold; letter-spacing: 2px; }
+
+    .asesor-bar { background: var(--azul); color: white; text-align: center; padding: 12px; font-size: 24px; font-weight: bold; margin: 15px 0; border-radius: 6px; }
+
+    .metricas { display: flex; gap: 15px; margin-bottom: 15px; }
+    .metrica-box { flex: 1; text-align: center; padding: 15px; background: #fff; border: 1px solid #ddd; border-radius: 8px; }
+    .metrica-label { font-size: 11px; font-weight: bold; color: #777; display: block; margin-bottom: 5px; text-transform: uppercase; }
+    .metrica-valor { font-size: 32px; font-weight: bold; color: var(--azul); }
+
+    .cal-table { width: 100%; border-collapse: collapse; table-layout: fixed; border: 2px solid #333; }
+    .cal-table th { background: #333; color: white; padding: 12px; font-size: 14px; border: 1px solid #333; }
+    .cal-table td { 
+      border: 1px solid #bbb; 
+      vertical-align: top; 
+      padding: 8px; 
+      min-height: 110px; 
+      background: #fff;
+      cursor: pointer;
+    }
+    
+    .dia-num { font-weight: bold; font-size: 16px; color: #333; margin-bottom: 8px; display: block; border-bottom: 1px solid #eee; }
+
+    .card-g { 
+      background: #eef6ff; 
+      border-left: 5px solid var(--azul); 
+      padding: 6px; 
+      border-radius: 3px;
+      margin-bottom: 5px;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+    }
+    .card-g b { font-size: 10px; display: block; color: #222; text-transform: uppercase; word-wrap: break-word; }
+    .card-g span { font-size: 12px; color: var(--rojo); font-weight: bold; }
+
+    .nota-v { background: #fff9c4; border: 1px dashed #fbc02d; font-size: 10px; padding: 5px; border-radius: 3px; text-align: center; margin-top: 5px; font-weight: bold; color: #555; }
+
+    /* Login */
+    #login-ui { height: 100vh; display: flex; justify-content: center; align-items: center; background: var(--azul); }
+    .login-card { background: white; padding: 40px; border-radius: 15px; text-align: center; width: 320px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
+    
+    .controles { display: flex; justify-content: center; gap: 15px; padding: 15px; background: #eee; border-bottom: 1px solid #ccc; }
+    .hidden { display: none !important; }
+  </style>
+</head>
+<body>
+
+<div id="login-ui">
+  <div class="login-card">
+    <img src="https://lh3.googleusercontent.com/d/1KtI0k7MurDkmdd82Diw7q2qm3-1e5ZKg" style="width:160px; margin-bottom:25px;">
+    <h2 style="color:var(--azul); margin-bottom:20px;">CALENDARIOS DE DESEMBOLSOS</h2>
+    <input type="text" id="user" placeholder="Usuario" style="width:100%; padding:12px; margin-bottom:12px; border:1px solid #ccc; border-radius:6px; box-sizing:border-box;">
+    <input type="password" id="pass" placeholder="Contraseña" style="width:100%; padding:12px; margin-bottom:20px; border:1px solid #ccc; border-radius:6px; box-sizing:border-box;">
+    <button onclick="entrar()" style="width:100%; padding:12px; background:var(--azul); color:white; border:none; border-radius:6px; font-weight:bold; cursor:pointer;">ACCEDER</button>
+  </div>
+</div>
+
+<div id="app-ui" class="hidden">
+  <div class="controles">
+    <button onclick="descargar()" style="padding:10px 20px; background:#28a745; color:white; border:none; border-radius:5px; cursor:pointer; font-weight:bold;">⬇ DESCARGAR CALENDARIO</button>
+    <select id="admin-select" class="hidden" onchange="cargarAsesor(this.value)" style="padding:10px; border-radius:5px;"></select>
+    <button onclick="cerrarSesion()" style="padding:10px 15px; border-radius:5px; cursor:pointer; background:#666; color:white; border:none;">Cerrar Sesión</button>
+  </div>
+
+  <div id="captura-area">
+    <div class="top-header">
+      <img src="https://lh3.googleusercontent.com/d/1_WBQG6nI1UzET0ov1ieoTvsLsbNTl_s1" class="logo-hdr">
+      <div class="title-center">
+        <h1 id="label-mes">MES</h1>
+        <p>DESEMBOLSOS PROGRAMADOS</p>
+      </div>
+      <img src="https://lh3.googleusercontent.com/d/1KtI0k7MurDkmdd82Diw7q2qm3-1e5ZKg" class="logo-hdr">
+    </div>
+
+    <div class="asesor-bar" id="txt-asesor">ASESOR: -</div>
+
+    <div class="metricas">
+      <div class="metrica-box">
+        <span class="metrica-label">TOTAL DESEMBOLSOS</span>
+        <span class="metrica-valor" id="res-count">0</span>
+      </div>
+      <div class="metrica-box">
+        <span class="metrica-label">MONTO TOTAL CARTERA</span>
+        <span class="metrica-valor" style="color:var(--rojo)" id="res-total">$0.00</span>
+      </div>
+    </div>
+
+    <div id="render-calendario"></div>
+  </div>
+</div>
+
+<script>
+  let asesorActual = "";
+
+  function entrar() {
+    const u = document.getElementById('user').value.trim();
+    const p = document.getElementById('pass').value.trim();
+    if(!u || !p) return alert("Ingresa datos");
+    
+    google.script.run.withSuccessHandler(res => {
+      if(res.autorizado) {
+        document.getElementById('login-ui').classList.add('hidden');
+        document.getElementById('app-ui').classList.remove('hidden');
+        if(res.rol === "ADMIN") {
+          const sel = document.getElementById('admin-select');
+          sel.innerHTML = ""; 
+          sel.classList.remove('hidden');
+          res.listaAsesores.forEach(a => { let o = document.createElement('option'); o.text = a; sel.add(o); });
+        }
+        cargarAsesor(res.nombreAsesor);
+      } else { alert("Usuario o contraseña incorrectos"); }
+    }).validarAcceso(u, p);
+  }
+
+  function cerrarSesion() {
+    // Limpia campos y vuelve al login visualmente
+    document.getElementById('user').value = "";
+    document.getElementById('pass').value = "";
+    document.getElementById('app-ui').classList.add('hidden');
+    document.getElementById('login-ui').classList.remove('hidden');
+    document.getElementById('admin-select').classList.add('hidden');
+  }
+
+  function cargarAsesor(nombre) {
+    asesorActual = nombre;
+    document.getElementById('txt-asesor').innerText = "ASESOR: " + nombre;
+    google.script.run.withSuccessHandler(res => {
+      if(res) {
+        document.getElementById('label-mes').innerText = res.infoMes.nombreMes + " " + res.infoMes.anio;
+        dibujar(res.valores, res.notas, res.infoMes);
+      }
+    }).obtenerDatosCompletos(nombre);
+  }
+
+  function dibujar(filas, notas, info) {
+    const cab = filas[0];
+    const iVenc = cab.findIndex(c => c.toUpperCase().includes("VENCIMIEN"));
+    const iGrupo = cab.findIndex(c => c.toUpperCase().includes("NOMBRE_G"));
+    const iNom = cab.findIndex(c => c.toUpperCase() === "NOMBRE");
+    const iMonto = cab.findIndex(c => c.toUpperCase().includes("DESEMBOLSA"));
+
+    let mapa = {}, sum = 0, count = 0;
+
+    for (let i = 1; i < filas.length; i++) {
+      let fStr = filas[i][iVenc];
+      if(!fStr || !fStr.includes('/')) continue;
+      let dia = parseInt(fStr.split('/')[0]);
+      let nombre = (filas[i][iGrupo] || filas[i][iNom] || "S/N").trim().toUpperCase();
+      let monto = parseFloat(filas[i][iMonto].replace(/[^0-9.-]+/g,"")) || 0;
+
+      if(!mapa[dia]) mapa[dia] = { grupos: {} };
+      if(!mapa[dia].grupos[nombre]) mapa[dia].grupos[nombre] = 0;
+      mapa[dia].grupos[nombre] += monto;
+      sum += monto; count++;
+    }
+
+    document.getElementById('res-count').innerText = count;
+    document.getElementById('res-total').innerText = "$" + sum.toLocaleString('es-MX', {minimumFractionDigits:2});
+
+    let h = '<table class="cal-table"><thead><tr><th>DOM</th><th>LUN</th><th>MAR</th><th>MIE</th><th>JUE</th><th>VIE</th><th>SAB</th></tr></thead><tbody><tr>';
+    let diaActual = 1;
+    
+    for(let i=0; i<42; i++) {
+      if(i < info.primerDia || diaActual > info.totalDias) {
+        h += '<td></td>';
+      } else {
+        let celda = `<div onclick="addNota(${diaActual})">`;
+        celda += `<span class="dia-num">${diaActual}</span>`;
+        if(mapa[diaActual]) {
+          for(let g in mapa[diaActual].grupos) {
+            celda += `<div class="card-g"><b>${g}</b><span>$${mapa[diaActual].grupos[g].toLocaleString('es-MX')}</span></div>`;
+          }
+        }
+        let nts = notas.filter(n => n[0] == diaActual);
+        nts.forEach(n => { celda += `<div class="nota-v">${n[2]}</div>`; });
+        celda += `</div>`;
+        h += `<td>${celda}</td>`;
+        diaActual++;
+      }
+      if((i+1)%7 == 0 && i < 41) h += '</tr><tr>';
+    }
+    document.getElementById('render-calendario').innerHTML = h + '</tr></tbody></table>';
+  }
+
+  function addNota(dia) {
+    let t = prompt("Nueva nota para el día " + dia + ":");
+    if(t) {
+      google.script.run.withSuccessHandler(() => cargarAsesor(asesorActual)).guardarNota(dia, asesorActual, t);
+    }
+  }
+
+  function descargar() {
+    html2canvas(document.getElementById('captura-area'), {scale: 3, useCORS: true}).then(canvas => {
+      let a = document.createElement('a');
+      a.download = 'Calendario_' + asesorActual + '.png';
+      a.href = canvas.toDataURL("image/png");
+      a.click();
+    });
+  }
+</script>
+</body>
+</html>
